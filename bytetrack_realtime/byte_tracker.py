@@ -322,3 +322,10 @@ class ByteTracker(object):
         resa = [t for i, t in enumerate(stracksa) if not i in dupa]
         resb = [t for i, t in enumerate(stracksb) if not i in dupb]
         return resa, resb
+
+    def delete_all_tracks(self):
+        self.tracked_stracks = []
+        self.lost_stracks = []
+        self.removed_stracks = []
+        self.frame_id = 0
+        BaseTrack.reset_count()
