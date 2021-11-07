@@ -28,4 +28,5 @@ for track in tracks:
    track_id = track.track_id
    ltrb = track.ltrb
    score = track.score
+   det_class = track.det_class
 ```

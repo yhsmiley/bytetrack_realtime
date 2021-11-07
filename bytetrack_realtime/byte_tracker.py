@@ -1,3 +1,5 @@
+from itertools import compress
+
 import numpy as np
 
 from bytetrack_realtime.bytetrack import matching
@@ -7,7 +9,7 @@ from bytetrack_realtime.bytetrack.basetrack import BaseTrack, TrackState
 
 class STrack(BaseTrack):
     shared_kalman = KalmanFilter()
-    def __init__(self, ltwh, score):
+    def __init__(self, ltwh, score, det_class):
 
         # wait activate
         self._ltwh = np.asarray(ltwh, dtype=np.float)
@@ -17,6 +19,7 @@ class STrack(BaseTrack):
 
         self.score = score
         self.tracklet_len = 0
+        self.det_class = det_class
 
     def predict(self):
         mean_state = self.mean.copy()
@@ -155,6 +158,15 @@ class ByteTracker(object):
         self.mot20 = mot20
 
     def update(self, detections):
+        """Update tracker with detections in current frame
+
+        Args:
+            detections (List[Tuple[List[float or int], float, str]]):
+                List of detections, each in tuples of ([left,top,w,h], confidence, detection_class)
+
+        Returns:
+            STrack: activated tracks
+        """
         self.frame_id += 1
         activated_starcks = []
         refind_stracks = []
@@ -167,6 +179,7 @@ class ByteTracker(object):
         bboxes, scores, det_classes = list(zip(*detections))
         bboxes = np.asarray(bboxes)
         scores = np.asarray(scores)
+        det_classes = list(det_classes)
 
         remain_inds = scores > self.track_thresh
         inds_low = scores > self.min_track_thresh
@@ -177,11 +190,13 @@ class ByteTracker(object):
         dets = bboxes[remain_inds]
         scores_keep = scores[remain_inds]
         scores_second = scores[inds_second]
+        classes_keep = list(compress(det_classes, remain_inds))
+        classes_second = list(compress(det_classes, inds_second))
 
         if len(dets) > 0:
             '''Detections'''
-            detections = [STrack(ltwh, s) for
-                          (ltwh, s) in zip(dets, scores_keep)]
+            detections = [STrack(ltwh, s, det_class) for
+                          (ltwh, s, det_class) in zip(dets, scores_keep, classes_keep)]
         else:
             detections = []
 
@@ -217,8 +232,8 @@ class ByteTracker(object):
         # association the untrack to the low score detections
         if len(dets_second) > 0:
             '''Detections'''
-            detections_second = [STrack(ltwh, s) for
-                          (ltwh, s) in zip(dets_second, scores_second)]
+            detections_second = [STrack(ltwh, s, det_class) for
+                          (ltwh, s, det_class) in zip(dets_second, scores_second, classes_second)]
         else:
             detections_second = []
         r_tracked_stracks = [strack_pool[i] for i in u_track if strack_pool[i].state == TrackState.Tracked]
