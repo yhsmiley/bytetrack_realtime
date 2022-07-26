@@ -18,6 +18,8 @@ cd bytetrack_realtime && pip3 install .
 
 ## Run
 
+Refer to an example [here](https://github.com/yhsmiley/streamlit_cv/blob/a80b0f49cfa26d39f846047dbe90a29787b1a584/misc/utils.py#L41) to use ScaledYOLOv4 detector with ByteTrack. You can also use any other detectors as long as the input format to the tracker is the same.
+
 Example usage:
 ```python
 from bytetrack_realtime.byte_tracker import ByteTracker
